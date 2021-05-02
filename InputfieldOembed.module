@@ -1,0 +1,80 @@
+<?php namespace ProcessWire;
+
+/**
+ * Collects input for InputfieldOembed fields
+ */
+
+class InputfieldOembed extends InputfieldURL {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Oembed',
+			'version' => 100,
+			'summary' => 'Input field for FieldtypeOembed.',
+			'icon' => 'globe',
+			'requires' => 'FieldtypeOembed',
+		);
+	}
+
+	public function __construct() {
+		parent::__construct();
+		$this->label = 'Oembed';
+	}
+
+	/**
+	 * Render inputfield
+	 * @return string
+	 * @throws WireException
+	 */
+	public function ___render() {
+
+		$this->config->styles->add($this->config->urls->InputfieldOembed . "InputfieldOembed.css");
+		$fieldtype = $this->get('hasField');
+
+		if(
+			$fieldtype &&
+			$fieldtype->type instanceof FieldtypeOembed &&
+			!empty($this->get('value')) &&
+			$this->hasPage instanceof Page
+		) {
+			$preview = $this->oembedPreview($this->hasPage->getFormatted($this->name));
+			if($preview) {
+				$this->appendMarkup($preview);
+			} else {
+				$this->error(__('No oembed data or provider found.'));
+			}
+		}
+
+		return parent::___render();
+	}
+
+	/**
+	 * Build preview for inputfield
+	 * @param $oembed
+	 * @return string
+	 */
+	public function oembedPreview($oembed) {
+
+		$out = '';
+
+		if($oembed instanceof Oembed && !$oembed->empty) {
+
+			$out .= '<div class="InputfieldOembedPreview">';
+			if($oembed->has('thumbnailUrl')) $out .= "<img src='$oembed->thumbnailUrl' width='150' />";
+			if($oembed->has('title')) $out .= "<h4>$oembed->title</h4>";
+
+			$out .= '<ul>';
+				if($oembed->has('providerName')) $out .= '<li>' . __('Provider: ') . $oembed->providerName . '</li>';
+				if($oembed->has('type')) $out .= '<li>' . __('Type: ') . $oembed->type . '</li>';
+				if($oembed->has('authorName')) $out .= '<li>' . __('Author: ') . $oembed->authorName . '</li>';
+
+			$out .= '</ul>';
+			$out .= '</div>';
+
+		}
+
+		return $out;
+
+	}
+}
+

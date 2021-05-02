@@ -1,0 +1,14 @@
+{
+    "name": "nr/oembedsfromstring",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Neue Rituale GbR",
+            "email": "code@neuerituale.com"
+        }
+    ],
+    "minimum-stability": "beta",
+    "require": {
+        "essence/essence": "^3.5"
+    }
+}

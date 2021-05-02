@@ -1,0 +1,360 @@
+<?php
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2021 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
+
+namespace ProcessWire;
+
+// load vendors
+use Essence\Di\Container;
+use \Essence\Essence;
+use \Essence\Media;
+use Essence\Provider;
+
+
+/**
+ * Class FieldtypeOembed
+ *
+ * @method Essence getEssense()
+ * @package ProcessWire
+ */
+
+class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule {
+
+	const MysqlDatetimeFormat = 'Y-m-d H:i:s';
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Oembed',
+			'version' => 100,
+			'summary' => 'Collect and store Oembed Data',
+			'icon' => 'globe',
+			'installs' => 'InputfieldOembed',
+		);
+	}
+
+	/**
+	 * Construct the Fieldtype, make sure all dependencies are in place
+	 */
+	public function __construct() {
+		require_once(__DIR__ . '/Oembed.php');
+		parent::__construct();
+	}
+
+	public function init() {
+
+		// find hookname and init lazy cron hook
+		$hookName = $this->timeFuncs[$this->cronSchedule];
+		if($hookName) $this->addHook('LazyCron::' . $hookName, $this, 'refreshOembedData');
+	}
+
+	/**
+	 * Return the database schema that defines an Event
+	 *
+	 * @param Field $field
+	 * @return array
+	 *
+	 */
+	public function getDatabaseSchema(Field $field) {
+
+		$schema = parent::getDatabaseSchema($field);
+		$schema['oembed'] = 'JSON';
+		$schema['expires'] = 'DATETIME';
+
+		return $schema;
+	}
+
+	/**
+	 * Return the Inputfield used to collect input for a field of this type
+	 */
+	public function getInputfield(Page $page, Field $field) {
+
+		/** @var InputfieldURL $inputfield */
+		$inputfield = $this->modules->get('InputfieldOembed');
+		$inputfield->set('noRelative', $field->get('noRelative'));
+		$inputfield->set('addRoot', $field->get('addRoot'));
+		$inputfield->set('cacheTime', $field->get('cacheTime'));
+
+		return $inputfield;
+	}
+
+	/**
+	 * Return a blank ready-to-populate value
+	 *
+	 * @param Page $page
+	 * @param Field $field
+	 * @return Oembed
+	 *
+	 */
+	public function getBlankValue(Page $page, Field $field) {
+		return new Oembed();
+	}
+
+	/**
+	 * Given a raw value from DB
+	 * @param Page $page
+	 * @param Field $field
+	 * @param array|int|string $value
+	 * @return string
+	 */
+	public function ___wakeupValue(Page $page, Field $field, $value) {
+		$oembedObj = $this->getBlankValue($page, $field);
+		$oembedData = json_decode($value['oembed'],JSON_OBJECT_AS_ARRAY);
+		if(is_array($oembedData)) $oembedObj->setArray($oembedData);
+
+		$field->set('oembed', $oembedObj);
+		$field->set('expires', $this->datetime->date('ts', $value['expires']));
+
+		return $value['data'];
+	}
+
+	/**
+	 * For storage in DB
+	 * @param Page $page
+	 * @param Field $field
+	 * @param array|float|int|object|string $value
+	 * @return array
+	 */
+	public function ___sleepValue(Page $page, Field $field, $value) {
+
+		// get raw data
+		if($value instanceof Oembed) $value = $page->getUnformatted($field->name);
+
+		$oembedData = $this->fetch($value);
+		return [
+			'data' => $value,
+			'oembed' => json_encode($oembedData, JSON_FORCE_OBJECT),
+			'expires' => $oembedData
+				? $this->datetime->date(self::MysqlDatetimeFormat, time() + $field->get('cacheTime'))
+				: 0
+		];
+	}
+
+	/**
+	 * Format a value for front-end output
+	 * @param Page $page
+	 * @param Field $field
+	 * @param string $value
+	 * @return Oembed
+	 */
+	public function ___formatValue(Page $page, Field $field, $value) {
+		return $field->get('oembed');
+	}
+
+	/**
+	 * Fetch Data
+	 * @param $url
+	 * @return array
+	 */
+	public function fetch($url) {
+
+		/** @var Essence $essence */
+		$essence = $this->getEssence();
+
+		/** @var Media $embed */
+		$embed = $essence->extract($url);
+		if(!$embed) return [];
+
+		// get properties and rewrite keys (camelCase)
+		$props = $embed->filledProperties();
+		$props = $this->arrayMapKeys($props, [$this->sanitizer, 'camelCase']);
+
+		return $props;
+	}
+
+	/**
+	 * @param array $configuration // for essence
+	 * @return Essence|mixed
+	 */
+	public function ___getEssence($configuration = []) {
+
+		if($this->essence instanceof Essence) return $this->essence;
+
+		require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
+
+		// parse customProviders JSON and add to configuration array;
+		try { $customProviders = json_decode($this->customProviders, JSON_OBJECT_AS_ARRAY);}
+		catch(\Exception $e) { /* ignore */ }
+		if(isset($customProviders) && is_array($customProviders) && count($customProviders))
+			$configuration = array_merge($configuration, $this->makeCustomProvidersConfig($customProviders));
+
+		// return instance
+		$this->essence = new Essence($configuration);
+		return $this->essence;
+	}
+
+	/**
+	 * @param $customProviders
+	 * @return array
+	 */
+	private function makeCustomProvidersConfig($customProviders) {
+
+		$configuration = [];
+		$configuration['filters'] = [];
+
+		foreach($customProviders as $key => $value) {
+
+			// skip existing configs
+			if(array_key_exists($key, $configuration)) continue;
+
+			try {
+				$configuration[$key] = \Essence\Di\Container::unique(function(Container $C) use ($value) {
+
+					/** @var Provider\MetaTags|Provider\OEmbed|Provider $provider */
+					$provider = $C->get($value['class'] . 'Provider');
+					if(array_key_exists('endpoint', $value) && method_exists($provider, 'setEndpoint'))
+						$provider->setEndpoint($value['endpoint']);
+
+					return $provider;
+				});
+
+				$configuration['filters'][$key] = $value['filter'];
+			} catch(\Exception $e) { /* ignore */ }
+
+		}
+
+		return $configuration;
+
+	}
+
+	/**
+	 * Method called when the field is database-queried from a $pages->find() selector
+	 *
+	 * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect
+	 * @param string $table
+	 * @param string $subfield
+	 * @param string $operator
+	 * @param string $value
+	 * @return PageFinderDatabaseQuerySelect
+	 *
+	 */
+	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+
+		if($subfield === 'data') {
+
+			return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+
+		} else {
+
+			// sanitize names
+			$field = $this->sanitizer->fieldName($subfield);
+			$table = $this->database->escapeTable($table);
+
+			// convert to timestamp
+			if($subfield === 'expires') {
+				$value = $this->datetime->date(self::MysqlDatetimeFormat, $value);
+				$query->where("$table.expires $operator ?", $value);
+				$query->where("$table.expires > ?", 0);
+
+			} else {
+
+				// cast to int or float
+				if(is_numeric($value)) $value = $value*1;
+
+				if($this->database->isOperator($operator, WireDatabasePDO::operatorTypeComparison)) {
+					if(!strlen($value)) {
+
+						$col = "JSON_EXTRACT(oembed, \"$.$field\")";
+						if($operator === '=') {
+							$where = "$col IS NULL OR $col='' OR JSON_CONTAINS(oembed, '{\"$field\": null}')=1";
+						} else {
+							$where = "$col IS NOT NULL AND $col !='' AND JSON_CONTAINS(oembed, '{\"$field\": null}')!=1";
+						}
+						$query->where($where);
+
+					} else {
+						$query->where("JSON_CONTAINS(oembed, ?, '$.$field') $operator 1", json_encode($value));
+					}
+				} else {
+					throw new \mysqli_sql_exception('Invalid operator for subfield: ' . $operator);
+				}
+			}
+
+			return $query;
+
+		}
+	}
+
+	/**
+	 * Field Config
+	 *
+	 * @param Field $field
+	 * @return InputfieldWrapper
+	 * @throws WireException
+	 * @throws WirePermissionException
+	 */
+	public function ___getConfigInputfields(Field $field) {
+
+		// defaults
+		if(is_null($field->get('noRelative'))) $field->set('noRelative', 1);
+		if(is_null($field->get('cacheTime'))) $field->set('cacheTime', 8640000);
+
+		$inputfields = parent::___getConfigInputfields($field);
+
+		/** @var InputfieldRadios $f */
+		$f = $this->modules->get('InputfieldInteger');
+		$f->attr('name', 'cacheTime');
+		$f->label = $this->_('Cachetime');
+		$f->columnWidth = 33;
+		$f->description = sprintf(
+			$this->_('The number of seconds an API response should be cached for. The default cache time is %1$s (%2$s days). %3$s means no cache (not recommended).'),
+			'`8640000`',
+			'100',
+			'`0`'
+		);
+		$f->value = $field->get('cacheTime');
+
+		// add before noRelative
+		$noRelative = $inputfields->get('noRelative');
+		$inputfields->insertBefore($f, $noRelative);
+
+		// hide noRelative field
+		$noRelative->collapsed = Inputfield::collapsedHidden;
+
+		return $inputfields;
+	}
+
+	/**
+	 * array_map for the keys
+	 *
+	 * @param array $array
+	 * @param callable $callable
+	 * @param array $options
+	 * @return array
+	 */
+	private function arrayMapKeys(array $array, callable $callable, $options = []) {
+
+		$defaults = array('recursive' => false);
+		$options = array_merge($defaults, $options);
+
+		$out = [];
+		foreach ($array as $key => $value) {
+			$out[$callable($key, $options)] = is_array($value && $options['recursive'])
+				? $this->arrayMapKeys($value, $callable)
+				: $value
+			;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Refresh all oembed fields. Respect the expires time
+	 * @param null $event
+	 */
+	public function refreshOembedData($event = null) {
+
+		$fields = $this->fields->find('type=' . $this);
+
+		foreach($fields as $field) {
+			$expiredPages = $this->pages->findMany($field->name . '.expires<now');
+			$expiredPages->each(function(Page $p) use ($field) {
+				$p->save($field->name);
+				wire()->log('Refresh Oembed Data From URL ' . $p->getUnformatted($field->name));
+			});
+		}
+	}
+}
+

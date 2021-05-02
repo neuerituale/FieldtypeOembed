@@ -1,0 +1,30 @@
+.InputfieldOembed{
+
+}
+.InputfieldOembed .InputfieldOembedPreview {
+	margin-top: 20px;
+}
+.InputfieldOembed .InputfieldOembedPreview:before,
+.InputfieldOembed .InputfieldOembedPreview:after {
+   content: "";
+   display: table;
+}
+.InputfieldOembed .InputfieldOembedPreview:after { clear: both; }
+
+.InputfieldOembed .InputfieldOembedPreview > * {
+	margin: 10px 0;
+}
+
+.InputfieldOembed .InputfieldOembedPreview img {
+	float: left;
+	width: 150px;
+}
+
+.InputfieldOembed .InputfieldOembedPreview img ~ * {
+	padding-left: 180px;
+}
+
+.InputfieldOembed .InputfieldOembedPreview ul {
+	list-style-position: inside;
+}
+
