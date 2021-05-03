@@ -32,6 +32,8 @@ Ryan and the TextformatterOEmbed by felixwahner. Thanks!
 ### Lazycron
 Setup the Lazycron schedule. The cache expiration is configurable in the field settings.
 
+![Lazycron](https://user-images.githubusercontent.com/11630948/116866358-8e7b6000-ac0b-11eb-8793-a5a06546ff09.png)
+
 ### Custom Provider for Essence
 You can configure your own `Oembed` or `OpenGraph` providers for Essence.  
 [How to add custom providers (Essence Git)](https://github.com/essence/essence#configuration)
@@ -54,6 +56,11 @@ You can configure your own `Oembed` or `OpenGraph` providers for Essence.
 The FieldtypeOembed extends the FieldtypeURL (core). 
 In addition to these settings, you can also set the cache time for the oembed data.
 The lazycron will update the data.
+
+![Fieldsettings](https://user-images.githubusercontent.com/11630948/116866356-8de2c980-ac0b-11eb-8d9f-dbcc9d751904.png)
+
+### Field preview
+![Fieldpreview](https://user-images.githubusercontent.com/11630948/116866352-8b806f80-ac0b-11eb-8842-d0f005b36354.png)
 
 ## API
 
