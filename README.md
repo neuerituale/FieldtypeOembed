@@ -120,8 +120,10 @@ $pages->find('embed.width>=200');
 ```
 
 ## GraphQLFieldtypeOembed
-You can query this field over ProcessGraphQL.
-Here are the field definitions:
+You can query this field over ProcessGraphQL.  
+Please install the additional module `GraphQLFieldtypeOembed`.
+
+### Field definitions
 
 ```
 myfield {
