@@ -12,6 +12,7 @@ Ryan and the TextformatterOEmbed by felixwahner. Thanks!
 - Backend preview
 - Searching in oembed data with $pages->find()
 - Autoupdate with lazycron
+- Support for [ProcessGraphQL](https://processwire.com/modules/process-graph-ql/) with the additional module *GraphQLFieldtypeOembed*
 
 ## Install
 
@@ -116,4 +117,27 @@ You can query the oembed result fields
 ```php
 $pages->find('embed.providerName=YouTube');
 $pages->find('embed.width>=200');
+```
+
+## GraphQLFieldtypeOembed
+You can query this field over ProcessGraphQL.
+Here are the field definitions:
+
+```
+myfield {
+   empty: Boolean
+   title: String
+   authorName: String
+   authorUrl: String
+   type: String
+   height: Int
+   width: Int
+   providerName: String
+   providerUrl: String
+   thumbnailHeight: Int
+   thumbnailWidth: Int
+   thumbnailUrl: String
+   html: String
+   url: String
+}
 ```
