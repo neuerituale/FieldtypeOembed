@@ -1,18 +1,25 @@
 .InputfieldOembed{
 
 }
+
 .InputfieldOembed .InputfieldOembedPreview {
 	margin-top: 20px;
 }
+
 .InputfieldOembed .InputfieldOembedPreview:before,
 .InputfieldOembed .InputfieldOembedPreview:after {
    content: "";
    display: table;
 }
+
 .InputfieldOembed .InputfieldOembedPreview:after { clear: both; }
 
 .InputfieldOembed .InputfieldOembedPreview > * {
-	margin: 10px 0;
+	margin: 5px 0!important;
+}
+
+.AdminThemeUikit .InputfieldOembed .InputfieldOembedPreview > * {
+	margin: 10px 0!important;
 }
 
 .InputfieldOembed .InputfieldOembedPreview img {
@@ -26,5 +33,9 @@
 
 .InputfieldOembed .InputfieldOembedPreview ul {
 	list-style-position: inside;
+}
+
+.InputfieldOembed .InputfieldOembedPreview ul li {
+	margin: 0;
 }
 

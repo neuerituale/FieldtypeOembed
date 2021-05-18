@@ -1,0 +1,117 @@
+<?php namespace ProcessWire;
+
+use GraphQL\Type\Definition\Type;
+use GraphQL\Type\Definition\ObjectType;
+use GraphQL\Type\Definition\InputObjectType;
+use ProcessWire\Page;
+use ProcessWire\Field;
+
+class GraphQLFieldtypeOembed extends WireData implements Module {
+
+	/**
+	 * getModuleInfo is a module required by all modules to tell ProcessWire about them
+	 * @return array
+	 */
+	public static function getModuleInfo() {
+
+		return array(
+			'title' => 'GraphQLFieldtypeOembed',
+			'version' => 110,
+			'summary' => 'GraphQL support for FieldtypeOembed.',
+			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
+			'icon' => 'globe',
+			'requires' => ['ProcessGraphQL']
+		);
+	}
+
+	public static function getType(Field $field)
+	{
+		return new ObjectType([
+			'name' => 'Oembed',
+			'fields' => [
+
+				'empty' => [
+					'type' => Type::boolean(),
+					'resolve' => function($value) { return (boolean) $value->empty; }
+				],
+
+				'title' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->title; }
+				],
+
+				'authorName' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->authorName; }
+				],
+
+				'authorUrl' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->authorUrl; }
+				],
+
+				'type' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->type; }
+				],
+
+				'height' => [
+					'type' => Type::int(),
+					'resolve' => function($value) { return (int) $value->height; }
+				],
+
+				'width' => [
+					'type' => Type::int(),
+					'resolve' => function($value) { return (int) $value->width; }
+				],
+
+				'providerName' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->providerName; }
+				],
+
+				'providerUrl' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->providerUrl; }
+				],
+
+				'thumbnailHeight' => [
+					'type' => Type::int(),
+					'resolve' => function($value) { return (int) $value->thumbnailHeight; }
+				],
+
+				'thumbnailWidth' => [
+					'type' => Type::int(),
+					'resolve' => function($value) { return (int) $value->thumbnailWidth; }
+				],
+
+				'thumbnailUrl' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->thumbnailUrl; }
+				],
+
+				'html' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->html; }
+				],
+
+				'url' => [
+					'type' => Type::string(),
+					'resolve' => function($value) { return (string) $value->url; }
+				],
+
+			],
+		]);
+	}
+
+	public static function getInputType(Field $field)
+	{
+		return Type::string();
+	}
+
+	public static function setValue(Page $page, Field $field, $value)
+	{
+		$fieldName = $field->name;
+		$page->$fieldName = $value;
+	}
+}

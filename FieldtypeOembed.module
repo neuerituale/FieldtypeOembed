@@ -28,8 +28,9 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Oembed',
-			'version' => 100,
+			'version' => 110,
 			'summary' => 'Collect and store Oembed Data',
+			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
 			'installs' => 'InputfieldOembed',
 		);
@@ -172,6 +173,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 		if($this->essence instanceof Essence) return $this->essence;
 
+		if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install essence in your the module directory.');
 		require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
 
 		// parse customProviders JSON and add to configuration array;
