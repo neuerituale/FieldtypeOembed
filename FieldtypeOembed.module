@@ -47,7 +47,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	public function init() {
 
 		// find hookname and init lazy cron hook
-		$hookName = $this->timeFuncs[$this->cronSchedule];
+		$hookName = @$this->timeFuncs[$this->cronSchedule];
 		if($hookName) $this->addHook('LazyCron::' . $hookName, $this, 'refreshOembedData');
 	}
 
