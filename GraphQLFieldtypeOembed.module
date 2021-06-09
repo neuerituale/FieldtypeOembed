@@ -16,7 +16,7 @@ class GraphQLFieldtypeOembed extends WireData implements Module {
 
 		return array(
 			'title' => 'GraphQLFieldtypeOembed',
-			'version' => 110,
+			'version' => 111,
 			'summary' => 'GraphQL support for FieldtypeOembed.',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',

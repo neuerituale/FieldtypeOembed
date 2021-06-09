@@ -9,7 +9,7 @@ class InputfieldOembed extends InputfieldURL {
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Oembed',
-			'version' => 110,
+			'version' => 111,
 			'summary' => 'Inputfield for FieldtypeOembed.',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',

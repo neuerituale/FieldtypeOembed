@@ -28,7 +28,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Oembed',
-			'version' => 110,
+			'version' => 111,
 			'summary' => 'Collect and store Oembed Data',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
