@@ -38,7 +38,7 @@ class InputfieldOembed extends InputfieldURL {
 			!empty($this->get('value')) &&
 			$this->hasPage instanceof Page
 		) {
-			$preview = $this->oembedPreview($this->hasPage->getFormatted($this->name));
+			$preview = $this->oembedPreview($this->hasPage->getFormatted($fieldtype->name));
 			if($preview) {
 				$this->appendMarkup($preview);
 			} else {
