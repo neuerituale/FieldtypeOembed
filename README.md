@@ -2,9 +2,9 @@
 
 ## What it does
 
-Store, collect and update oembed data from external sources. 
-It used the great PHP Library [Essence](https://github.com/essence/essence) by Félix Girault and 
-adds some processwire magic. This field is based on the example module FieldtypeEvents by 
+Store, collect and update oembed data from external sources.
+It used the great PHP Library [Essence](https://github.com/essence/essence) by Félix Girault and
+adds some processwire magic. This field is based on the example module FieldtypeEvents by
 Ryan and the TextformatterOEmbed by felixwahner. Thanks!
 
 ## Features
@@ -41,20 +41,20 @@ You can configure your own `Oembed` or `OpenGraph` providers for Essence.
 
 ```json
 {
-	"getty": {
-		"class": "OEmbed",
-		"filter": "~gty\\.im/.+~i",
-		"endpoint": "http://embed.gettyimages.com/oembed?url=:url"
-	},
-	"neuerituale": {
-		"class": "OpenGraph",
-		"filter": "~neuerituale\\.com.?~i"
-	}
+   "getty": {
+      "class": "OEmbed",
+      "filter": "~gty\\.im/.+~i",
+      "endpoint": "http://embed.gettyimages.com/oembed?url=:url"
+   },
+   "neuerituale": {
+      "class": "OpenGraph",
+      "filter": "~neuerituale\\.com.?~i"
+   }
 }
 ```
 ### Field settings
 `Fields` > `embed` > `Details`
-The FieldtypeOembed extends the FieldtypeURL (core). 
+The FieldtypeOembed extends the FieldtypeURL (core).
 In addition to these settings, you can also set the cache time for the oembed data.
 The lazycron will update the data.
 
@@ -143,3 +143,6 @@ myfield {
    url: String
 }
 ```
+## Todos
+- Remove extend urlfield!
+- remove _oembed helper construct (dirty)

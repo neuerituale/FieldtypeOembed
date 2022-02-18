@@ -28,7 +28,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Oembed',
-			'version' => 111,
+			'version' => 113,
 			'summary' => 'Collect and store Oembed Data',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
@@ -125,7 +125,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 		$oembedData = $this->fetch($value);
 		return [
 			'data' => $value,
-			'oembed' => json_encode($oembedData, JSON_FORCE_OBJECT),
+			'oembed' => json_encode($oembedData, JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
 			'expires' => $oembedData
 				? $this->datetime->date(self::MysqlDatetimeFormat, time() + $field->get('cacheTime'))
 				: 0
@@ -141,6 +141,16 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 */
 	public function ___formatValue(Page $page, Field $field, $value) {
 		return $page->get('_oembedObj' . $field->name);
+	}
+
+	/**
+	 * @param Page $page
+	 * @param Field $field
+	 * @param $value
+	 * @return bool
+	 */
+	public function isDeleteValue(Page $page, Field $field, $value) {
+		return empty($value);
 	}
 
 	/**
