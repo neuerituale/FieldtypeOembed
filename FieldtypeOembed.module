@@ -1,7 +1,8 @@
 <?php
+
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2021 Neue Rituale GbR
+ * Copyright (c) 2022 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
@@ -17,7 +18,12 @@ use Essence\Provider;
 /**
  * Class FieldtypeOembed
  *
- * @method Essence getEssense()
+ * @method string wakeupValue(Page $page, Field $field, $value)
+ * @method array sleepValue(Page $page, Field $field, $value)
+ * @method Oembed formatValue(Page $page, Field $field, $value)
+ * @method bool validateEssenceResult($essenceResult)
+ * @method Essence getEssense($configuration = [])
+ *
  * @package ProcessWire
  */
 
@@ -25,10 +31,12 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 	const MysqlDatetimeFormat = 'Y-m-d H:i:s';
 
+	const refreshLog = 'oembed-refresh';
+
 	public static function getModuleInfo() {
 		return array(
 			'title' => 'Oembed',
-			'version' => 113,
+			'version' => 114,
 			'summary' => 'Collect and store Oembed Data',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
@@ -45,7 +53,6 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	}
 
 	public function init() {
-
 		// find hookname and init lazy cron hook
 		$hookName = @$this->timeFuncs[$this->cronSchedule];
 		if($hookName) $this->addHook('LazyCron::' . $hookName, $this, 'refreshOembedData');
@@ -165,7 +172,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 		/** @var Media $embed */
 		$embed = $essence->extract($url);
-		if(!$embed) return [];
+		if(!$this->validateEssenceResult($embed)) return [];
 
 		// get properties and rewrite keys (camelCase)
 		$props = $embed->filledProperties();
@@ -175,8 +182,21 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	}
 
 	/**
-	 * @param array $configuration // for essence
-	 * @return Essence|mixed
+	 * Validate response (hookable)
+	 * @param $essenceResult
+	 * @return bool
+	 */
+	public function ___validateEssenceResult($essenceResult) {
+		return (
+			$essenceResult instanceof Media &&
+			!empty($essenceResult->get('type'))
+		);
+	}
+
+	/**
+	 * @param $configuration
+	 * @return Essence
+	 * @throws \Exception
 	 */
 	public function ___getEssence($configuration = []) {
 
@@ -211,17 +231,25 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 			if(array_key_exists($key, $configuration)) continue;
 
 			try {
-				$configuration[$key] = \Essence\Di\Container::unique(function(Container $C) use ($value) {
 
-					/** @var Provider\MetaTags|Provider\OEmbed|Provider $provider */
-					$provider = $C->get($value['class'] . 'Provider');
-					if(array_key_exists('endpoint', $value) && method_exists($provider, 'setEndpoint'))
-						$provider->setEndpoint($value['endpoint']);
+				// Add new provider
+				if(is_array($value)) {
+					$configuration[$key] = \Essence\Di\Container::unique(function(Container $C) use ($value) {
+						/** @var Provider\MetaTags|Provider\OEmbed|Provider $provider */
+						$provider = $C->get($value['class'] . 'Provider');
+						if(array_key_exists('endpoint', $value) && method_exists($provider, 'setEndpoint'))
+							$provider->setEndpoint($value['endpoint']);
+						return $provider;
+					});
 
-					return $provider;
-				});
+					$configuration['filters'][$key] = $value['filter'] ?? false;
+				}
 
-				$configuration['filters'][$key] = $value['filter'];
+				// Disabled provider
+				else {
+					$configuration['filters'][$key] = false;
+				}
+
 			} catch(\Exception $e) { /* ignore */ }
 
 		}
@@ -256,8 +284,8 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 			// convert to timestamp
 			if($subfield === 'expires') {
 				$value = $this->datetime->date(self::MysqlDatetimeFormat, $value);
-				$query->where("$table.expires $operator ?", $value);
-				$query->where("$table.expires > ?", 0);
+				$query->where("$table.expires{$operator}?", $value);
+				$query->where("$table.expires>?", 0);
 
 			} else {
 
@@ -335,7 +363,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param array $options
 	 * @return array
 	 */
-	private function arrayMapKeys(array $array, callable $callable, $options = []) {
+	public function ___arrayMapKeys(array $array, callable $callable, $options = []) {
 
 		$defaults = array('recursive' => false);
 		$options = array_merge($defaults, $options);
@@ -348,8 +376,14 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 			;
 		}
 
-		return $out;
+		return $this->filterProps($out);
 	}
+
+	/**
+	 * @param array $out
+	 * @return array
+	 */
+	public function ___filterProps(array $out) : array { return $out; }
 
 	/**
 	 * Refresh all oembed fields. Respect the expires time
@@ -357,14 +391,23 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 */
 	public function refreshOembedData($event = null) {
 
-		$fields = $this->fields->find('type=' . $this);
+		/** @var Fields $fields */
+		$fields = wire('fields');
 
-		foreach($fields as $field) {
-			$expiredPages = $this->pages->findMany($field->name . '.expires<now');
-			$expiredPages->each(function(Page $p) use ($field) {
-				$p->save($field->name);
-				wire()->log('Refresh Oembed Data From URL ' . $p->getUnformatted($field->name));
-			});
+		/** @var WireLog $log */
+		$log = wire('log');
+
+		/** @var Field $field */
+		foreach($fields->findByType($this) as $field) {
+
+			$expiredPages = $this->pages->findMany("{$field->name}.expires<now,check_access=0,include=hidden");
+
+			/** @var Page $expiredPage */
+			foreach($expiredPages as $expiredPage) {
+				$expiredPage->of(false);
+				$expiredPage->save($field->name);
+				$log->save(self::refreshLog, 'Refresh Oembed Data From URL ' . $expiredPage->getUnformatted($field->name));
+			}
 		}
 	}
 }

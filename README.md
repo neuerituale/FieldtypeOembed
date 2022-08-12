@@ -49,9 +49,103 @@ You can configure your own `Oembed` or `OpenGraph` providers for Essence.
    "neuerituale": {
       "class": "OpenGraph",
       "filter": "~neuerituale\\.com.?~i"
-   }
+   },
+   "tiktok": {
+      "class": "OEmbed",
+      "filter": "~tiktok\\.com/.+~i",
+      "endpoint": "https://www.tiktok.com/oembed?url=:url"
+   },
+   "InstagramOEmbed": {
+      "class": "OEmbed",
+      "filter": "~instagr(\\.am|am\\.com)/p/.+~i",
+      "endpoint": "http://api.instagram.com/oembed?format=json&url=:url&hidecaption=true"
+   },
 }
 ```
+
+#### You can disable all providers
+```json
+{
+	"23hq": false,
+	"500px": false,
+	"Animoto": false,
+	"Aol": false,
+	"App.net": false,
+	"Bambuser": false,
+	"Bandcamp": false,
+	"Blip.tv": false,
+	"Cacoo": false,
+	"CanalPlus": false,
+	"Chirb.it": false,
+	"CircuitLab": false,
+	"Clikthrough": false,
+	"CollegeHumorOEmbed": false,
+	"CollegeHumorOpenGraph": false,
+	"Coub": false,
+	"CrowdRanking": false,
+	"DailyMile": false,
+	"Dailymotion": false,
+	"Deviantart": false,
+	"Dipity": false,
+	"Documentcloud": false,
+	"Dotsub": false,
+	"EdocrOEmbed": false,
+	"EdocrTwitterCards": false,
+	"FacebookPost": false,
+	"FlickrOEmbed": false,
+	"FlickrOpenGraph": false,
+	"FunnyOrDie": false,
+	"Gist": false,
+	"Gmep": false,
+	"HowCast": false,
+	"Huffduffer": false,
+	"Hulu": false,
+	"Ifixit": false,
+	"Ifttt": false,
+	"Imgur": false,
+	"InstagramOEmbed": false,
+	"InstagramOpenGraph": false,
+	"Jest": false,
+	"Justin": false,
+	"Kickstarter": false,
+	"Meetup": false,
+	"Mixcloud": false,
+	"Mobypicture": false,
+	"Nfb": false,
+	"Official.fm": false,
+	"Polldaddy": false,
+	"PollEverywhere": false,
+	"Prezi": false,
+	"Qik": false,
+	"Rdio": false,
+	"Revision3": false,
+	"Roomshare": false,
+	"Sapo": false,
+	"Screenr": false,
+	"Scribd": false,
+	"Shoudio": false,
+	"Sketchfab": false,
+	"SlideShare": false,
+	"SoundCloud": false,
+	"SpeakerDeck": false,
+	"Spotify": false,
+	"TedOEmbed": false,
+	"TedOpenGraph": false,
+	"Twitter": false,
+	"Ustream": false,
+	"Vhx": false,
+	"Viddler": false,
+	"Videojug": false,
+	"Vimeo": false,
+	"Vine": false,
+	"Wistia": false,
+	"WordPress": false,
+	"Yfrog": false,
+	"Youtube": false,
+	"FacebookVideo": false
+}
+```
+
 ### Field settings
 `Fields` > `embed` > `Details`
 The FieldtypeOembed extends the FieldtypeURL (core).
