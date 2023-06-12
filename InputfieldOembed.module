@@ -13,7 +13,6 @@ class InputfieldOembed extends InputfieldURL {
 			'title' => 'Oembed',
 			'version' => 114,
 			'summary' => 'Inputfield for FieldtypeOembed.',
-			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
 			'requires' => 'FieldtypeOembed',
 		);

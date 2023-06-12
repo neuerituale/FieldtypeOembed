@@ -3,8 +3,6 @@
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\InputObjectType;
-use ProcessWire\Page;
-use ProcessWire\Field;
 
 class GraphQLFieldtypeOembed extends WireData implements Module {
 
@@ -18,14 +16,11 @@ class GraphQLFieldtypeOembed extends WireData implements Module {
 			'title' => 'GraphQLFieldtypeOembed',
 			'version' => 111,
 			'summary' => 'GraphQL support for FieldtypeOembed.',
-			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
-			'requires' => ['ProcessGraphQL']
 		);
 	}
 
-	public static function getType(Field $field)
-	{
+	public static function getType(Field $field) {
 		return new ObjectType([
 			'name' => 'Oembed',
 			'fields' => [
@@ -104,13 +99,11 @@ class GraphQLFieldtypeOembed extends WireData implements Module {
 		]);
 	}
 
-	public static function getInputType(Field $field)
-	{
+	public static function getInputType(Field $field) {
 		return Type::string();
 	}
 
-	public static function setValue(Page $page, Field $field, $value)
-	{
+	public static function setValue(Page $page, Field $field, $value) {
 		$fieldName = $field->name;
 		$page->$fieldName = $value;
 	}
