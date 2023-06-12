@@ -1,17 +1,25 @@
-<?php namespace ProcessWire;
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
+
+namespace ProcessWire;
 
 /**
  * Collects input for InputfieldOembed fields
- *
  * @method string render()
+ * @method string oembedPreview($oembed): string
  */
 
 class InputfieldOembed extends InputfieldURL {
 
-	public static function getModuleInfo() {
+	public static function getModuleInfo(): array {
 		return array(
 			'title' => 'Oembed',
-			'version' => 114,
+			'version' => 115,
 			'summary' => 'Inputfield for FieldtypeOembed.',
 			'icon' => 'globe',
 			'requires' => 'FieldtypeOembed',
@@ -28,7 +36,7 @@ class InputfieldOembed extends InputfieldURL {
 	 * @return string
 	 * @throws WireException
 	 */
-	public function ___render() {
+	public function ___render(): string {
 
 		$this->config->styles->add($this->config->urls->InputfieldOembed . "InputfieldOembed.css");
 		$fieldtype = $this->get('hasField');
@@ -42,7 +50,13 @@ class InputfieldOembed extends InputfieldURL {
 			$preview = $this->oembedPreview($this->hasPage->getFormatted($fieldtype->name));
 			if($preview) {
 				$this->appendMarkup($preview);
-			} else {
+			}
+
+			elseif($fieldtype->hideOembedErrors ?? false) {
+				$this->appendMarkup("<p class='notes'>".$this->_('No preview available...')."</p>");
+			}
+
+			else {
 				$this->error(__('No oembed data or provider found.'));
 			}
 		}
@@ -52,10 +66,10 @@ class InputfieldOembed extends InputfieldURL {
 
 	/**
 	 * Build preview for inputfield
-	 * @param $oembed
+	 * @param ?Oembed $oembed
 	 * @return string
 	 */
-	public function oembedPreview($oembed) {
+	public function ___oembedPreview(Oembed $oembed = null): string {
 
 		$out = '';
 
@@ -76,7 +90,27 @@ class InputfieldOembed extends InputfieldURL {
 		}
 
 		return $out;
+	}
 
+	/**
+	 * Configure Inputfield
+	 * @return InputfieldWrapper
+	 */
+	public function ___getConfigInputfields(): InputfieldWrapper {
+
+		$inputfields = parent::___getConfigInputfields();
+
+		/** @var InputfieldCheckbox $inputfields */
+		$inputfields->add([
+			'type' => 'checkbox',
+			'name' => 'hideOembedErrors',
+			'label' => __('Oembed errors'),
+			'checkboxLabel' => __('Skip errors'),
+			'description' => __('Hide the error message in field rendering, if no oembed data or provider found. This is useful if you want to use the field for simple URLs as well.'),
+			'checked' => $this->hasField->hideOembedErrors
+		]);
+
+		return $inputfields;
 	}
 }
 

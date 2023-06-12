@@ -2,17 +2,17 @@
 
 /**
  * COPYRIGHT NOTICE
- * Copyright (c) 2022 Neue Rituale GbR
+ * Copyright (c) 2023 Neue Rituale GbR
  * @author NR <code@neuerituale.com>
  */
 
 namespace ProcessWire;
 
 // load vendors
-use Essence\Di\Container;
+use \Essence\Di\Container;
 use \Essence\Essence;
 use \Essence\Media;
-use Essence\Provider;
+use \Essence\Provider;
 
 
 /**
@@ -22,7 +22,9 @@ use Essence\Provider;
  * @method array sleepValue(Page $page, Field $field, $value)
  * @method Oembed formatValue(Page $page, Field $field, $value)
  * @method bool validateEssenceResult($essenceResult)
- * @method Essence getEssense($configuration = [])
+ * @method Essence getEssence($configuration = [])
+ * @method array arrayMapKeys(array $array, callable $callable, array $options = [])
+ * @method array filterProps(array $out)
  *
  * @package ProcessWire
  */
@@ -30,13 +32,14 @@ use Essence\Provider;
 class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule {
 
 	const MysqlDatetimeFormat = 'Y-m-d H:i:s';
-
 	const refreshLog = 'oembed-refresh';
+	const installEssenceMsg = '';
+	private ?Essence $essence = null;
 
-	public static function getModuleInfo() {
+	public static function getModuleInfo(): array {
 		return array(
 			'title' => 'Oembed',
-			'version' => 114,
+			'version' => 115,
 			'summary' => 'Collect and store Oembed Data',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
@@ -44,40 +47,45 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 		);
 	}
 
-	/**
-	 * Construct the Fieldtype, make sure all dependencies are in place
-	 */
+	public function install(){
+		if(
+			!class_exists("\Essence\Essence") &&
+			!file_exists(__DIR__ . '/vendor/autoload.php')
+		) $this->warning($this->installEssenceMsg, Notice::allowMarkdown);
+	}
+
 	public function __construct() {
 		require_once(__DIR__ . '/Oembed.php');
+		$this->installEssenceMsg = $this->_("Please install the Essence library via `composer install` in the FieldtypeOembed module directory.");
 		parent::__construct();
 	}
 
 	public function init() {
-		// find hookname and init lazy cron hook
-		$hookName = @$this->timeFuncs[$this->cronSchedule];
+		// find hook name and init lazy cron hook
+		$hookName = $this->timeFuncs[$this->cronSchedule] ?? false;
 		if($hookName) $this->addHook('LazyCron::' . $hookName, $this, 'refreshOembedData');
 	}
 
 	/**
 	 * Return the database schema that defines an Event
-	 *
 	 * @param Field $field
 	 * @return array
-	 *
 	 */
-	public function getDatabaseSchema(Field $field) {
-
+	public function getDatabaseSchema(Field $field): array {
 		$schema = parent::getDatabaseSchema($field);
 		$schema['oembed'] = 'JSON';
 		$schema['expires'] = 'DATETIME';
-
 		return $schema;
 	}
 
 	/**
 	 * Return the Inputfield used to collect input for a field of this type
+	 * @param Page $page
+	 * @param Field $field
+	 * @return InputfieldURL
+	 * @throws WirePermissionException
 	 */
-	public function getInputfield(Page $page, Field $field) {
+	public function getInputfield(Page $page, Field $field): InputfieldURL {
 
 		/** @var InputfieldURL $inputfield */
 		$inputfield = $this->modules->get('InputfieldOembed');
@@ -96,7 +104,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @return Oembed
 	 *
 	 */
-	public function getBlankValue(Page $page, Field $field) {
+	public function getBlankValue(Page $page, Field $field): Oembed {
 		return new Oembed();
 	}
 
@@ -107,7 +115,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param array|int|string $value
 	 * @return string
 	 */
-	public function ___wakeupValue(Page $page, Field $field, $value) {
+	public function ___wakeupValue(Page $page, Field $field, $value): string {
 		$oembedObj = $this->getBlankValue($page, $field);
 		$oembedData = json_decode($value['oembed'],JSON_OBJECT_AS_ARRAY);
 		if(is_array($oembedData)) $oembedObj->setArray($oembedData);
@@ -124,7 +132,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param array|float|int|object|string $value
 	 * @return array
 	 */
-	public function ___sleepValue(Page $page, Field $field, $value) {
+	public function ___sleepValue(Page $page, Field $field, $value): array {
 
 		// get raw data
 		if($value instanceof Oembed) $value = $page->getUnformatted($field->name);
@@ -146,7 +154,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param string $value
 	 * @return Oembed
 	 */
-	public function ___formatValue(Page $page, Field $field, $value) {
+	public function ___formatValue(Page $page, Field $field, $value): Oembed {
 		return $page->get('_oembedObj' . $field->name);
 	}
 
@@ -156,7 +164,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param $value
 	 * @return bool
 	 */
-	public function isDeleteValue(Page $page, Field $field, $value) {
+	public function isDeleteValue(Page $page, Field $field, $value): bool {
 		return empty($value);
 	}
 
@@ -165,7 +173,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param $url
 	 * @return array
 	 */
-	public function fetch($url) {
+	public function fetch($url): array {
 
 		/** @var Essence $essence */
 		$essence = $this->getEssence();
@@ -176,9 +184,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 		// get properties and rewrite keys (camelCase)
 		$props = $embed->filledProperties();
-		$props = $this->arrayMapKeys($props, [$this->sanitizer, 'camelCase']);
-
-		return $props;
+		return $this->arrayMapKeys($props, [$this->sanitizer, 'camelCase']);
 	}
 
 	/**
@@ -186,7 +192,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param $essenceResult
 	 * @return bool
 	 */
-	public function ___validateEssenceResult($essenceResult) {
+	public function ___validateEssenceResult($essenceResult): bool {
 		return (
 			$essenceResult instanceof Media &&
 			!empty($essenceResult->get('type'))
@@ -194,16 +200,20 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Get the essence instance
 	 * @param $configuration
 	 * @return Essence
 	 * @throws \Exception
 	 */
-	public function ___getEssence($configuration = []) {
+	public function ___getEssence($configuration = []): Essence {
 
 		if($this->essence instanceof Essence) return $this->essence;
 
-		if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception('Please install essence in your the module directory.');
-		require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
+		// check global essence class and include autoload
+		if(!class_exists("\Essence\Essence")) {
+			if(!file_exists(__DIR__ . '/vendor/autoload.php')) throw new \Exception($this->installEssenceMsg);
+			require_once(/*NoCompile*/__DIR__ . '/vendor/autoload.php');
+		}
 
 		// parse customProviders JSON and add to configuration array;
 		try { $customProviders = json_decode($this->customProviders, JSON_OBJECT_AS_ARRAY);}
@@ -220,7 +230,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param $customProviders
 	 * @return array
 	 */
-	private function makeCustomProvidersConfig($customProviders) {
+	private function makeCustomProvidersConfig($customProviders): array {
 
 		$configuration = [];
 		$configuration['filters'] = [];
@@ -260,16 +270,14 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 	/**
 	 * Method called when the field is database-queried from a $pages->find() selector
-	 *
 	 * @param DatabaseQuerySelect|PageFinderDatabaseQuerySelect
 	 * @param string $table
 	 * @param string $subfield
 	 * @param string $operator
 	 * @param string $value
 	 * @return PageFinderDatabaseQuerySelect
-	 *
 	 */
-	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+	public function getMatchQuery($query, $table, $subfield, $operator, $value): PageFinderDatabaseQuerySelect {
 
 		if($subfield === 'data') {
 
@@ -318,13 +326,12 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 	/**
 	 * Field Config
-	 *
 	 * @param Field $field
 	 * @return InputfieldWrapper
 	 * @throws WireException
 	 * @throws WirePermissionException
 	 */
-	public function ___getConfigInputfields(Field $field) {
+	public function ___getConfigInputfields(Field $field): InputfieldWrapper {
 
 		// defaults
 		if(is_null($field->get('noRelative'))) $field->set('noRelative', 1);
@@ -357,21 +364,21 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 	/**
 	 * array_map for the keys
-	 *
 	 * @param array $array
 	 * @param callable $callable
 	 * @param array $options
 	 * @return array
 	 */
-	public function ___arrayMapKeys(array $array, callable $callable, $options = []) {
+	public function ___arrayMapKeys(array $array, callable $callable, array $options = []): array {
 
-		$defaults = array('recursive' => false);
-		$options = array_merge($defaults, $options);
+		$options = array_merge([
+			'recursive' => false
+		], $options);
 
 		$out = [];
 		foreach ($array as $key => $value) {
 			$out[$callable($key, $options)] = is_array($value && $options['recursive'])
-				? $this->arrayMapKeys($value, $callable)
+				? $this->arrayMapKeys($value, $callable, $options)
 				: $value
 			;
 		}
@@ -380,6 +387,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Filter props for hooking
 	 * @param array $out
 	 * @return array
 	 */
@@ -387,26 +395,26 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 	/**
 	 * Refresh all oembed fields. Respect the expires time
-	 * @param null $event
+	 * @param $event
+	 * @return void
 	 */
 	public function refreshOembedData($event = null) {
-
-		/** @var Fields $fields */
-		$fields = wire('fields');
-
-		/** @var WireLog $log */
-		$log = wire('log');
-
-		/** @var Field $field */
-		foreach($fields->findByType($this) as $field) {
-
+		foreach(wire()->fields->findByType($this) as $field) {
 			$expiredPages = $this->pages->findMany("{$field->name}.expires<now,check_access=0,include=hidden");
-
-			/** @var Page $expiredPage */
 			foreach($expiredPages as $expiredPage) {
-				$expiredPage->of(false);
-				$expiredPage->save($field->name);
-				$log->save(self::refreshLog, 'Refresh Oembed Data From URL ' . $expiredPage->getUnformatted($field->name));
+				try {
+					$expiredPage->of(false);
+					$expiredPage->save($field->name);
+					wire()->log->save(
+						self::refreshLog,
+						'Refresh Oembed Data From URL ' . $expiredPage->getUnformatted($field->name)
+					);
+				} catch(\Exception $exception) {
+					wire()->log->save(
+						self::refreshLog,
+						'Error in field ' . $expiredPage->getUnformatted($field->name) . ': ' . $exception->getMessage()
+					);
+				}
 			}
 		}
 	}

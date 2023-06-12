@@ -13,6 +13,7 @@ Ryan and the TextformatterOEmbed by felixwahner. Thanks!
 - Searching in oembed data with $pages->find()
 - Autoupdate with lazycron
 - Support for [ProcessGraphQL](https://processwire.com/modules/process-graph-ql/) with the additional module *GraphQLFieldtypeOembed*
+- Filter result with [hooks](#result-hooks)
 
 ## Install
 
@@ -177,6 +178,25 @@ $page->embed->empty
 /** @var string return the html from oembed result */
 "$page->embed"
 $page->embed->html
+```
+
+### Result Hooks
+If you want to filter or change the results of the oembed provider, use the hookable methods e.g. `___filterProps()`.
+
+In this example we want to get the high resolution version of the thumbnail of a YouTube video.
+```php
+// some where in your ready.php
+// Replace hqdefault preview thumbnail with maxresdefault
+
+$this->addHook('FieldtypeOembed::filterProps', function (HookEvent $event) {
+   $propsArray = $event->arguments(0);
+   if(is_array($propsArray) && $propsArray['providerName'] === 'YouTube') {
+      $maxResultUrl = str_replace('/hqdefault.jpg', '/maxresdefault.jpg', $propsArray['thumbnailUrl']);
+      // test max result url
+      if((new WireHttp())->status($maxResultUrl) === 200) $propsArray['thumbnailUrl'] = $maxResultUrl;
+      $event->return = $propsArray;
+   }
+});
 ```
 
 ## The Oembed object

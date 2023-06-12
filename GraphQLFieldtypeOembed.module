@@ -1,4 +1,12 @@
-<?php namespace ProcessWire;
+<?php
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
+ */
+
+namespace ProcessWire;
 
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\ObjectType;
@@ -14,7 +22,7 @@ class GraphQLFieldtypeOembed extends WireData implements Module {
 
 		return array(
 			'title' => 'GraphQLFieldtypeOembed',
-			'version' => 111,
+			'version' => 115,
 			'summary' => 'GraphQL support for FieldtypeOembed.',
 			'icon' => 'globe',
 		);

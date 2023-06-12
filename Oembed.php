@@ -1,8 +1,13 @@
-<?php namespace ProcessWire;
+<?php
 
 /**
- * FieldtypeOembed: Oembed
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2023 Neue Rituale GbR
+ * @author NR <code@neuerituale.com>
  */
+
+namespace ProcessWire;
+
 class Oembed extends WireData {
 
 	/**

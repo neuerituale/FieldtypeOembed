@@ -1,14 +1,26 @@
 {
-    "name": "processwire/fieldtypeoembed",
+    "name": "nr/fieldtypeoembed",
+    "type": "pw-module",
+    "description": "Collect and store Oembed Data",
+    "keywords": [ "processwire", "module", "oembed" ],
+    "homepage": "https://github.com/neuerituale/FieldtypeOembed",
     "license": "MIT",
     "authors": [
         {
-            "name": "Neue Rituale GbR",
-            "email": "code@neuerituale.com"
+            "name": "Neue Rituale",
+            "email": "code@neuerituale.com",
+            "homepage": "https://neuerituale.com/",
+            "role": "Developer"
         }
     ],
     "minimum-stability": "beta",
     "require": {
+        "hari/pw-module": "~1.0",
         "essence/essence": "^3.5"
+    },
+    "config": {
+        "allow-plugins": {
+            "hari/pw-module": true
+        }
     }
 }
