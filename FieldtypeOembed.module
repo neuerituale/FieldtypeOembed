@@ -105,7 +105,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 *
 	 */
 	public function getBlankValue(Page $page, Field $field): Oembed {
-		return new Oembed();
+		return new Oembed($page, $field);
 	}
 
 	/**
@@ -122,6 +122,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 
 		$page->setQuietly('_oembedObj' . $field->name, $oembedObj);
 		$page->setQuietly('_oembedExpires' . $field->name, $this->datetime->date('ts', $value['expires']));
+
 		return $value['data'];
 	}
 
@@ -154,7 +155,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param string $value
 	 * @return Oembed
 	 */
-	public function ___formatValue(Page $page, Field $field, $value): Oembed {
+	public function ___formatValue(Page $page, Field $field, $value) {
 		return $page->get('_oembedObj' . $field->name);
 	}
 

@@ -26,6 +26,7 @@ class FieldtypeOembedConfig extends ModuleConfig
 		return [
 			'cronSchedule' => 604800,
 			'timeFuncs' => $getTimeFuncsFunction->call($lazyCronInstance),
+			'customProviders' => '',
 		];
 	}
 

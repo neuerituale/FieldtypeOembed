@@ -11,11 +11,28 @@ namespace ProcessWire;
 class Oembed extends WireData {
 
 	/**
+	 * @var Field|null
+	 *
+	 */
+	protected $field = null;
+
+	/**
+	 * @var null|Page
+	 *
+	 */
+	protected $page = null;
+
+	/**
 	 * Construct a new Event
 	 */
-	public function __construct() {
-		$this->set('empty', true);
+	public function __construct(Page $page, Field $field) {
 		parent::__construct();
+
+		$page->wire($this);
+		$this->page = $page;
+		$this->field = $field;
+
+		$this->set('empty', true);
 	}
 
 	/**
