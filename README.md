@@ -27,6 +27,12 @@ Ryan and the TextformatterOEmbed by felixwahner. Thanks!
    like. In our examples we named it simply "embed".
 5. Add the field to a template and edit a page using that template.
 
+## Install via composer
+1. Execute the following command in your website root directory.
+   ```bash
+   composer require nr/fieldtypeoembed
+   ```
+
 ## Configuration
 
 `Modules` > `Configure` > `FieldtypeOembed`
