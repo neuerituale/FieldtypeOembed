@@ -3,9 +3,8 @@
 ## What it does
 
 Store, collect and update oembed data from external sources.
-It used the great PHP Library [Essence](https://github.com/essence/essence) by Félix Girault and
-adds some processwire magic. This field is based on the example module FieldtypeEvents by
-Ryan and the TextformatterOEmbed by felixwahner. Thanks!
+This module uses the great PHP Library [Essence](https://github.com/essence/essence) by Félix Girault and
+adds some processwire magic. It is inspired by Ryan's example module FieldtypeEvents and the TextformatterOEmbed module by felixwahner. Thanks!
 
 ## Features
 - Simple embedding of content via oembed endpoints and opengraph crawling
@@ -25,7 +24,7 @@ Ryan and the TextformatterOEmbed by felixwahner. Thanks!
 3. In admin: Modules > Refresh. Install Fieldtype > Oembed.
 4. Create a new field of type Oembed, and name it whatever you would
    like. In our examples we named it simply "embed".
-5. Add the field to a template and edit a page using that template.
+5. Add the field to a template and edit a page using that template. Enter a (embed)-url in the field and save the page.
 
 ## Install via composer
 1. Execute the following command in your website root directory.
@@ -38,7 +37,7 @@ Ryan and the TextformatterOEmbed by felixwahner. Thanks!
 `Modules` > `Configure` > `FieldtypeOembed`
 
 ### Lazycron
-Setup the Lazycron schedule. The cache expiration is configurable in the field settings.
+Set up the Lazycron schedule. The cache expiration is configurable in the field settings.
 
 ![Lazycron](https://user-images.githubusercontent.com/11630948/116866358-8e7b6000-ac0b-11eb-8793-a5a06546ff09.png)
 
@@ -166,7 +165,7 @@ The lazycron will update the data.
 
 ## API
 
-### Returns the Oembed object (WireData).
+### Returns the Oembed object (WireData)
 ```php
 /** @var \ProcessWire\Oembed */
 $page->embed
