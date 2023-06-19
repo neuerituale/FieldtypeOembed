@@ -12,13 +12,11 @@ class Oembed extends WireData {
 
 	/**
 	 * @var Field|null
-	 *
 	 */
 	protected $field = null;
 
 	/**
 	 * @var null|Page
-	 *
 	 */
 	protected $page = null;
 

@@ -20,13 +20,13 @@ class GraphQLFieldtypeOembed extends WireData implements Module {
 	 */
 	public static function getModuleInfo() {
 
-		return array(
+		return [
 			'title' => 'GraphQLFieldtypeOembed',
-			'version' => 115,
+			'version' => 116,
 			'summary' => 'GraphQL support for FieldtypeOembed.',
 			'icon' => 'globe',
 			'requires' => ['FieldtypeOembed']
-		);
+		];
 	}
 
 	public static function getType(Field $field) {

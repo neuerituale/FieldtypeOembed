@@ -37,14 +37,14 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	private ?Essence $essence = null;
 
 	public static function getModuleInfo(): array {
-		return array(
+		return [
 			'title' => 'Oembed',
-			'version' => 115,
+			'version' => 116,
 			'summary' => 'Collect and store Oembed Data',
 			'href' => 'https://github.com/neuerituale/FieldtypeOembed',
 			'icon' => 'globe',
 			'installs' => 'InputfieldOembed',
-		);
+		];
 	}
 
 	public function install(){
@@ -276,9 +276,9 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @param string $subfield
 	 * @param string $operator
 	 * @param string $value
-	 * @return PageFinderDatabaseQuerySelect
+	 * @return DatabaseQuerySelect|PageFinderDatabaseQuerySelect
 	 */
-	public function getMatchQuery($query, $table, $subfield, $operator, $value): PageFinderDatabaseQuerySelect {
+	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
 
 		if($subfield === 'data') {
 

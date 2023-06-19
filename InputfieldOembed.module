@@ -17,13 +17,13 @@ namespace ProcessWire;
 class InputfieldOembed extends InputfieldURL {
 
 	public static function getModuleInfo(): array {
-		return array(
+		return [
 			'title' => 'Oembed',
-			'version' => 115,
+			'version' => 116,
 			'summary' => 'Inputfield for FieldtypeOembed.',
 			'icon' => 'globe',
 			'requires' => 'FieldtypeOembed',
-		);
+		];
 	}
 
 	public function __construct() {
