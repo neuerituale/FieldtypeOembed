@@ -25,7 +25,7 @@ class GraphQLFieldtypeOembed extends WireData implements Module {
 			'version' => 116,
 			'summary' => 'GraphQL support for FieldtypeOembed.',
 			'icon' => 'globe',
-			'requires' => ['FieldtypeOembed']
+			'requires' => ['FieldtypeOembed', 'PHP>=7.4.0']
 		];
 	}
 

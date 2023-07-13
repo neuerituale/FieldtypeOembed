@@ -22,7 +22,7 @@ class InputfieldOembed extends InputfieldURL {
 			'version' => 116,
 			'summary' => 'Inputfield for FieldtypeOembed.',
 			'icon' => 'globe',
-			'requires' => 'FieldtypeOembed',
+			'requires' => ['FieldtypeOembed', 'PHP>=7.4.0'],
 		];
 	}
 
