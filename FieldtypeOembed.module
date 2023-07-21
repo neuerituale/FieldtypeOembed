@@ -112,35 +112,32 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * Given a raw value from DB
 	 * @param Page $page
 	 * @param Field $field
-	 * @param array|int|string $value
+	 * @param array $value
 	 * @return string
 	 */
-	public function ___wakeupValue(Page $page, Field $field, $value): string {
+	public function ___wakeupValue(Page $page, Field $field, $value): Oembed {
 		$oembedObj = $this->getBlankValue($page, $field);
 		$oembedData = json_decode($value['oembed'],JSON_OBJECT_AS_ARRAY);
 		if(is_array($oembedData)) $oembedObj->setArray($oembedData);
 
-		$page->setQuietly('_oembedObj' . $field->name, $oembedObj);
-		$page->setQuietly('_oembedExpires' . $field->name, $this->datetime->date('ts', $value['expires']));
+		if(!empty($value['data']) && $oembedObj->get('empty')) {
+			$oembedObj->set('url', $value['data']);
+		}
 
-		return $value['data'];
+		return $oembedObj;
 	}
 
 	/**
 	 * For storage in DB
 	 * @param Page $page
 	 * @param Field $field
-	 * @param array|float|int|object|string $value
+	 * @param Oembed $value
 	 * @return array
 	 */
 	public function ___sleepValue(Page $page, Field $field, $value): array {
-
-		// get raw data
-		if($value instanceof Oembed) $value = $page->getUnformatted($field->name);
-
-		$oembedData = $this->fetch($value);
+		$oembedData = $this->fetch($value->url);
 		return [
-			'data' => $value,
+			'data' => $value->url,
 			'oembed' => json_encode($oembedData, JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
 			'expires' => $oembedData
 				? $this->datetime->date(self::MysqlDatetimeFormat, time() + $field->get('cacheTime'))
@@ -149,24 +146,49 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Given a value, make it clean and of the correct type for storage within a Page
+	 *
+	 * @param Page $page
+	 * @param Field $field
+	 * @param Oembed $value
+	 * @return Oembed
+	 *
+	 */
+	public function sanitizeValue(Page $page, Field $field, $value) {
+		if(!$value instanceof Oembed) {
+			$oembed = $this->getBlankValue($page, $field);
+			$value = $this->sanitizer->url($value, array(
+				'allowRelative' => false,
+				'allowIDN' => $field->get("allowIDN") ? true : false,
+				'stripQuotes' => $field->get("allowQuotes") ? false : true,
+			));
+			if(!empty($value)) {
+				$oembed->set("url", $value);
+			}
+			return $oembed;
+		}
+		return $value;
+	}
+
+	/**
 	 * Format a value for front-end output
 	 * @param Page $page
 	 * @param Field $field
-	 * @param string $value
+	 * @param Oembed $value
 	 * @return Oembed
 	 */
 	public function ___formatValue(Page $page, Field $field, $value) {
-		return $page->get('_oembedObj' . $field->name);
+		return $value;
 	}
 
 	/**
 	 * @param Page $page
 	 * @param Field $field
-	 * @param $value
+	 * @param Oembed $value
 	 * @return bool
 	 */
 	public function isDeleteValue(Page $page, Field $field, $value): bool {
-		return empty($value);
+		return empty($value->url);
 	}
 
 	/**
@@ -400,18 +422,18 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 * @return void
 	 */
 	public function refreshOembedData($event = null) {
-		foreach(wire()->fields->findByType($this) as $field) {
+		foreach($this->fields->findByType($this) as $field) {
 			$expiredPages = $this->pages->findMany("{$field->name}.expires<now,check_access=0,include=hidden");
 			foreach($expiredPages as $expiredPage) {
 				try {
 					$expiredPage->of(false);
 					$expiredPage->save($field->name);
-					wire()->log->save(
+					$this->log->save(
 						self::refreshLog,
 						'Refresh Oembed Data From URL ' . $expiredPage->getUnformatted($field->name)
 					);
 				} catch(\Exception $exception) {
-					wire()->log->save(
+					$this->log->save(
 						self::refreshLog,
 						'Error in field ' . $expiredPage->getUnformatted($field->name) . ': ' . $exception->getMessage()
 					);

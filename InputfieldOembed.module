@@ -40,14 +40,15 @@ class InputfieldOembed extends InputfieldURL {
 
 		$this->config->styles->add($this->config->urls->InputfieldOembed . "InputfieldOembed.css");
 		$fieldtype = $this->get('hasField');
+		$value = $this->get('value');
 
 		if(
 			$fieldtype &&
 			$fieldtype->type instanceof FieldtypeOembed &&
-			!empty($this->get('value')) &&
-			$this->hasPage instanceof Page
+			!empty($value) &&
+			$value->url
 		) {
-			$preview = $this->oembedPreview($this->hasPage->getFormatted($fieldtype->name));
+			$preview = $this->oembedPreview($value);
 			if($preview) {
 				$this->appendMarkup($preview);
 			}
@@ -62,6 +63,13 @@ class InputfieldOembed extends InputfieldURL {
 		}
 
 		return parent::___render();
+	}
+
+	protected function setAttributeValue($value) {
+		if($value instanceof Oembed) {	
+			$value->url = parent::setAttributeValue($value->url);
+		}
+		return $value;
 	}
 
 	/**
