@@ -31,6 +31,7 @@ class Oembed extends WireData {
 		$this->field = $field;
 
 		$this->set('empty', true);
+		$this->set('url', '');
 	}
 
 	/**
@@ -44,7 +45,7 @@ class Oembed extends WireData {
 	public function set($key, $value) {
 
 		// declare as valid
-		if($key !== 'empty') $this->set('empty', false);
+		if($key !== 'empty' && $key !== 'url') $this->set('empty', false);
 
 		// date
 		if($key === 'date') $value = $value ? wireDate('c', $value) : '';

@@ -50,7 +50,7 @@ class FieldtypeOembedConfig extends ModuleConfig
 		if(!empty($this->customProviders)) {
 			$customProviders = json_decode($this->customProviders,JSON_OBJECT_AS_ARRAY);
 			if(!is_array($customProviders)) {
-				wire()->error('Invalid JSON in field Custom Providers (JSON)');
+				$this->error('Invalid JSON in field Custom Providers (JSON)');
 			}
 		}
 
