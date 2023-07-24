@@ -64,7 +64,7 @@ class Oembed extends WireData {
 	 * @return string
 	 */
 	public function __toString() {
-		return $this->get("url");
+		return $this->render();
 	}
 }
 
