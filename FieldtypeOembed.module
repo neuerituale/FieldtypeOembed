@@ -402,7 +402,7 @@ class FieldtypeOembed extends FieldtypeURL implements Module, ConfigurableModule
 	 */
 	public function refreshOembedData($event = null) {
 		foreach(wire()->fields->findByType($this) as $field) {
-			$expiredPages = $this->pages->findMany("{$field->name}.expires<now,check_access=0,include=hidden");
+			$expiredPages = $this->pages->findMany("{$field->name}.expires<now, {$field->name}.expires>0, check_access=0, include=hidden, sort={$field->name}.expires");
 			foreach($expiredPages as $expiredPage) {
 				try {
 					$expiredPage->of(false);

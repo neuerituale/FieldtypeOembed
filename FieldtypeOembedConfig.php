@@ -46,14 +46,6 @@ class FieldtypeOembedConfig extends ModuleConfig
 			'options' => $this->get('timeFuncs')
 		]);
 
-		// validate Custom Providers (JSON)
-		if(!empty($this->customProviders)) {
-			$customProviders = json_decode($this->customProviders,JSON_OBJECT_AS_ARRAY);
-			if(!is_array($customProviders)) {
-				wire()->error('Invalid JSON in field Custom Providers (JSON)');
-			}
-		}
-
 		/** @var InputfieldTextarea */
 		$inputfields->add([
 			'type' => 'Textarea',
@@ -62,6 +54,15 @@ class FieldtypeOembedConfig extends ModuleConfig
 			'rows' => 20,
 			'description' => __('Add custom Providers here. For information on how to add custom providers please refer to the documentation.'),
 		]);
+
+		// validate Custom Providers (JSON)
+		$customProviders = $this->modules->getConfig('FieldtypeOembed', 'customProviders');
+		if(!empty($customProviders)) {
+			$customProvidersArray = json_decode($customProviders,JSON_OBJECT_AS_ARRAY);
+			if(!is_array($customProvidersArray)) {
+				$inputfields->get('customProviders')->error('Invalid JSON');
+			}
+		}
 
 		return $inputfields;
 	}
