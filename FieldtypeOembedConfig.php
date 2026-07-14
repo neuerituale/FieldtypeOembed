@@ -17,18 +17,33 @@ class FieldtypeOembedConfig extends ModuleConfig
 	 * @throws WireException
 	 */
 	public function getDefaults(): array {
+	    // get schedules from Lazy Cron (gracefully handle if not yet installed)
+	    /** @var LazyCron|null $lazyCronInstance */
+	    $lazyCronInstance = $this->modules->get('LazyCron');
+	    
+	    $timeFuncs = $lazyCronInstance ? $lazyCronInstance->getTimeFuncs() : [];
+		/**
+	    if ($lazyCronInstance) {
+	        $getTimeFuncsFunction = function(){ return $this->timeFuncs; };
+	        $timeFuncs = $getTimeFuncsFunction->call($lazyCronInstance);
+	    } else {
+	        // Fallback defaults (matches LazyCron's common options)
+	        $timeFuncs = [
+	            604800 => 'everyWeek',     // default
+	            86400  => 'everyDay',
+	            3600   => 'everyHour',
+	            1800   => 'every30Minutes',
+	            // add more if needed
+	        ];
+	    }
+		**/
 
-		// get schedules from Lazy Cron
-		/** @var LazyCron $lazyCronInstance */
-		$lazyCronInstance = $this->modules->get('LazyCron');
-		$getTimeFuncsFunction = function(){ return $this->timeFuncs; };
-
-		return [
-			'cronSchedule' => 604800,
-			'timeFuncs' => $getTimeFuncsFunction->call($lazyCronInstance),
-			'customProviders' => '',
-		];
-	}
+    return [
+        'cronSchedule' => 604800,
+        'timeFuncs' => $timeFuncs,
+        'customProviders' => '',
+    ];
+}
 
 	/**
 	 * @return InputfieldWrapper
